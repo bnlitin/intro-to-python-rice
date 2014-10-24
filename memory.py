@@ -43,7 +43,7 @@ def click(pos):
         exposed[index] = True
         
         # ignore clicks on the same card
-        if len(history) == 0 or history[-1] != index:
+        if matched[index] == False or exposed[index] == False:
             #print "index",index,"history",history
             history.append(index)    
             
@@ -51,7 +51,6 @@ def click(pos):
                 if cards[history[-1]] == cards[history[-2]]:
                     matched[history[-1]] = True
                     matched[history[-2]] = True
-                    #print "matched value",cards[history[-1]],"index",index               
             if state == 0:
                 state = 1
             elif state == 1:
@@ -68,16 +67,14 @@ def click(pos):
                
 def draw(canvas):
     global cards, exposed, matched
-    i = 0
-    for card in cards:
-        # draw matched cards first
+    for i in range(16):
+        card = cards[i]
         if matched[i] == True:
             canvas.draw_text(str(card),[10+WIDTH*i, HEIGHT//2], 60, "Red")
         elif exposed[i] == True:
             canvas.draw_text(str(card),[10+WIDTH*i, HEIGHT//2], 60, "White")
         else:
             canvas.draw_polygon([[0+WIDTH*i,0],[0+WIDTH*i,HEIGHT],[WIDTH+WIDTH*i,HEIGHT],[WIDTH+WIDTH*i,0]],10,"Green")
-        i += 1
 
 # create frame and add a button and labels
 frame = simplegui.create_frame("Memory states", 16 * WIDTH, 100)
