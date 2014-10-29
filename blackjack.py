@@ -1,4 +1,3 @@
-
 # Mini-project #6 - Blackjack
 # Author: Boris Litinsky
 # Date: 10/25/2014
@@ -17,7 +16,6 @@ card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-ass
 
 # initialize some useful global variables
 in_play = False
-outcome = ""
 score = 0
 
 # define globals for cards
@@ -28,6 +26,7 @@ VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10,
 # define card class
 class Card:
     def __init__(self, suit, rank):
+        self.front_image = True
         if (suit in SUITS) and (rank in RANKS):
             self.suit = suit
             self.rank = rank
@@ -48,8 +47,8 @@ class Card:
     def get_value(self):
         return VALUES[self.rank]
         
-    def draw(self, canvas, pos, front=True):
-        if front == True:
+    def draw(self, canvas, pos):
+        if self.front_image == True:
             card_loc = (CARD_CENTER[0] + CARD_SIZE[0] * RANKS.index(self.rank), 
                         CARD_CENTER[1] + CARD_SIZE[1] * SUITS.index(self.suit))
             canvas.draw_image(card_images, card_loc, CARD_SIZE, [pos[0] + CARD_CENTER[0], pos[1] + CARD_CENTER[1]], CARD_SIZE)
@@ -62,7 +61,6 @@ class Hand:
     def __init__(self):
         self.card_hand = []
         self.hand_value = 0
-        self.front = True
 
     def __str__(self):
         self.string = ""
@@ -83,23 +81,16 @@ class Hand:
         return self.hand_value
 
     def show_front_card(self):
-        self.front = True
+        self.card_hand[0].front_image = True
         
     def show_back_card(self):
-        self.front = False
+        self.card_hand[0].front_image = False
         
     def draw(self, canvas, pos):
-        i = 0
         for card in self.card_hand:
-            x_pos = pos[0] + i * CARD_SIZE[0]
-            y_pos = pos[1]
-            
-            if (i == 0):
-                show_front = self.front
-            else:
-                show_front = True
-            card.draw(canvas, [x_pos,y_pos], show_front) 
-            i +=1
+            x_pos = pos[0] + CARD_SIZE[0] * self.card_hand.index(card)
+            y_pos = pos[1]            
+            card.draw(canvas, [x_pos,y_pos]) 
         
 # define deck class 
 class Deck:
@@ -125,11 +116,11 @@ class Deck:
 
 #define event handlers for buttons
 def deal():
-    global outcome, in_play, deck, plrHand, dlrHand, dlrMsg, score, plrMsg
+    global in_play, deck, plrHand, dlrHand, dlrMsg, score, plrMsg
       
     # create and shuffle new card deck and create player and dealer hands
-    deck = Deck()
-    deck.shuffle()
+    deck = Deck()		# create a new 52-card deck
+    deck.shuffle()		# shuffle card deck
     plrHand = Hand()
     dlrHand = Hand()
     dlrMsg = ""
@@ -138,8 +129,7 @@ def deal():
     # if a game is already in progress and a deal() is clicked, penalize player
     if in_play == True:
         score -= 1
-    else:
-        in_play = True
+    in_play = True   # game started
         
     # deal two cards to player and dealer
     for i in range(2):
@@ -147,15 +137,7 @@ def deal():
         dlrHand.add_card(deck.deal_card())    
 
     dlrHand.show_back_card()
-    
-    if dlrHand.get_value() == 21:
-        dlrHand.show_front_card()
-        dlrMsg = "Dealer wins! Blackjack!"
-        score -= 1
-        in_play = False
-        plrMsg = "New Deal?"
-    else:
-        plrMsg = "Hit or Stand?"
+    plrMsg = "Hit or Stand?"
           
 def hit():
     global in_play, deck, plrHand, dlrMsg, score, in_play, plrMsg
@@ -186,7 +168,10 @@ def stand():
 
         # if busted, assign a message to outcome, update in_play and score 
         dlrHand.show_front_card()
-        if dlrHand.get_value() > 21:
+        if dlrHand.get_value() == 21:
+            dlrMsg = "Dealer wins! Blackjack!"
+            score -= 1         
+        elif dlrHand.get_value() > 21:
             dlrMsg = "Player wins! Dealer Busted!"
             score += 1   
         elif dlrHand.get_value() >= plrHand.get_value():
@@ -205,18 +190,17 @@ def stand():
 def draw(canvas):
     global plrHand, dlrHand, dlrMsg, score, plrMsg
     
-    # test to make sure that card.draw works, replace with your code below
+    # draw dealer's and player's card hands
     dlrHand.draw(canvas, [100, 100])
     plrHand.draw(canvas, [100, 300])
     
-    # draw text
+    # draw text messages
     canvas.draw_text("Dealer", (100,  80), 24, 'Black')
     canvas.draw_text(dlrMsg,   (200,  80), 24, 'Black')    
     canvas.draw_text("Player", (100, 280), 24, 'Black')
     canvas.draw_text(plrMsg,   (200, 280), 24, 'Black')
     canvas.draw_text("Blackjack", (200, 40), 36, 'Black')
     canvas.draw_text("Score:" + str(score), (500, 40), 24, 'Red')
-
 
 # initialization frame
 frame = simplegui.create_frame("Blackjack", 600, 600)
@@ -228,11 +212,6 @@ frame.add_button("Hit",  hit, 200)
 frame.add_button("Stand", stand, 200)
 frame.set_draw_handler(draw)
 
-
 # get things rolling
 deal()
 frame.start()
-
-
-
-
